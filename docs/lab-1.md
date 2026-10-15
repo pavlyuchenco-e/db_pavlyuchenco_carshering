@@ -75,6 +75,7 @@ id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY
 ## Как проверить
 
 ```bash
+"C:\Users\Acer\AppData\Roaming\Python\Python311\Scripts\dbcheck.exe" --lab 1
 dbcheck --lab 1 --stars
 dbcheck --lab 1 --fresh          # на базе, пересозданной с нуля
 dbcheck run demo/lab1.sql        # сценарий по шагам
