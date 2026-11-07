@@ -1,7 +1,6 @@
 # Лаба 2. Запросы к своим данным
 
 **Цель:** научиться получать из базы ответы на вопросы по своей теме.
-
 **Срок:** Pull Request `lab-2` в `main` до 23:59 накануне встречи 3.
 
 ## Теория
@@ -119,12 +118,54 @@ dbcheck run demo/lab2.sql --sql    # шаги вместе с текстом з�
 ## Вопросы к сдаче
 
 1. В каком порядке база выполняет части запроса: `FROM`, `WHERE`, `GROUP BY`, `HAVING`, `SELECT`, `ORDER BY`?
+`FROM`Берёт таблицы - `WHERE`Отбрасывает строки по условию - `GROUP BY`Собирает строки в группы - `HAVING`Отбрасывает группы по условию - `SELECT` Вычисляет столбцы результата - `ORDER BY`Сортирует
 2. Чем `INNER JOIN` отличается от `LEFT JOIN`?
+`INNER JOIN` оставляет только строки, у которых нашлась пара;
+`LEFT JOIN` оставляет все строки левой таблицы; если пары нет, столбцы правой таблицы равны `NULL`.
 3. Как найти строки, у которых нет пары в другой таблице? Покажите свой запрос.
+    SELECT c.name
+    FROM customers c
+    LEFT JOIN orders o ON o.customer_id = c.id
+    WHERE o.id IS NULL;
 4. Что делает `GROUP BY`?
+ `GROUP BY` собирает строки с одинаковым значением в группу, агрегатная функция считает одно значение на группу: `count`, `sum`, `avg`, `min`, `max`.
 5. Чем `WHERE` отличается от `HAVING`?
+    `WHERE` фильтрует строки до группировки, `HAVING` фильтрует группы после неё.
 6. Чем `count(*)` отличается от `count(колонка)`?
+`count(*)` считает все строки, `count(колонка)` только строки, где колонка не `NULL`.
 7. Почему `WHERE x = NULL` ничего не находит и как написать правильно?
+**NULL** означает «значение неизвестно». Любое сравнение с `NULL` даёт `NULL`, а не `true`, поэтому `WHERE x = NULL` ничего не находит. Правильно: `WHERE x IS NULL`. 
 8. Что такое подзапрос? Покажите один из своих.
+это запрос внутри другого запроса:
+SELECT full_name
+FROM clients 
+WHERE id IN (
+    SELECT client_id 
+    FROM fines
+    WHERE is_paid = 0
+);
 9. Что такое CTE (`WITH`) и зачем он нужен?
+**CTE (`WITH`)** даёт имя промежуточному результату и делает длинный запрос читаемым:
+WITH ranked AS (
+    SELECT 
+        id AS trip_id, 
+        client_id, 
+        cost,
+        row_number() OVER (
+            PARTITION BY client_id          
+            ORDER BY cost DESC NULLS LAST, id  
+        ) AS place 
+    FROM trips
+)
+SELECT 
+    c.full_name AS client, 
+    r.place, 
+    r.trip_id AS trip, 
+    r.cost
+FROM ranked r
+JOIN clients c ON c.id = r.client_id 
+WHERE r.place <= 3                  
+ORDER BY c.full_name, r.place;
+
 10. Чем оконная функция отличается от `GROUP BY`?
+оконные функции считают значение по группе строк, но, в отличие от `GROUP BY`, не схлопывают строки: `ROW_NUMBER() OVER (PARTITION BY category ORDER BY price DESC)` нумерует товары внутри каждой категории. Ещё примеры: `RANK()`, `SUM(...) OVER (ORDER BY ...)` для накопительной суммы, `LAG(...)` для значения из предыдущей строки.
