@@ -54,7 +54,7 @@ SELECT
     ROUND((100 + random() * 2000)::numeric, 2) AS cost
 FROM (
     SELECT 
-        NOW() - (random() * 30 || ' days')::interval AS start_t,
+        NOW() - (random() * 30 * interval '1 day') AS start_t,
         i
     FROM generate_series(1, 2000) AS i
 ) AS sub;
